@@ -10,7 +10,7 @@
  * serverless restarts between messages.
  */
 
-import { prisma } from "./prisma.js";
+import { prisma } from "./prisma";
 import {
   sendMessage,
   answerCallbackQuery,
@@ -18,14 +18,14 @@ import {
   downloadTelegramFile,
   inlineKeyboard,
   notifyAdmin,
-} from "./telegram.js";
+} from "./telegram";
 import {
   computeEndTime,
   computeTotalPrice,
   getAvailableUnits,
   bookingTypeLabel,
   formatDateTime,
-} from "./availability.js";
+} from "./availability";
 import { put } from "@vercel/blob";
 
 // ─── Entry point ────────────────────────────────────────
@@ -39,6 +39,19 @@ export async function handleUpdate(update) {
     }
   } catch (err) {
     console.error("[BotFlow] Unhandled error:", err);
+    // Attempt to notify the user something went wrong
+    const chatId =
+      update.message?.chat?.id ?? update.callback_query?.message?.chat?.id;
+    if (chatId) {
+      try {
+        await sendMessage(
+          chatId,
+          "⚠️ Something went wrong. Please send /start to try again.",
+        );
+      } catch (_) {
+        // ignore
+      }
+    }
   }
 }
 
