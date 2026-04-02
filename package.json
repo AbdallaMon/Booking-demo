@@ -6,15 +6,32 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "seed": "npx tsx prisma/seed.js"
+  },
+  "prisma": {
+    "seed": "npx tsx prisma/seed.js"
   },
   "dependencies": {
+    "@emotion/cache": "^11.14.0",
+    "@emotion/react": "^11.14.0",
+    "@emotion/server": "^11.11.0",
+    "@emotion/styled": "^11.14.1",
+    "@mui/icons-material": "^7.3.9",
+    "@mui/material": "^7.3.9",
+    "@prisma/adapter-pg": "^7.6.0",
+    "@prisma/client": "^7.6.0",
+    "@vercel/blob": "^2.3.2",
     "next": "16.2.2",
+    "pg": "^8.20.0",
     "react": "19.2.4",
     "react-dom": "19.2.4"
   },
   "devDependencies": {
+    "dotenv": "^17.4.0",
     "eslint": "^9",
-    "eslint-config-next": "16.2.2"
+    "eslint-config-next": "16.2.2",
+    "prisma": "^7.6.0",
+    "tsx": "^4.21.0"
   }
 }

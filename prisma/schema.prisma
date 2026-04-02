@@ -1,0 +1,111 @@
+// Prisma schema for Apartment Rental Booking System
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─── Models ──────────────────────────────────────────────
+
+model Place {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  createdAt DateTime @default(now())
+
+  units    Unit[]
+  bookings Booking[]
+}
+
+model Unit {
+  id               String   @id @default(cuid())
+  placeId          String
+  name             String
+  slug             String   @unique
+  description      String?
+  capacity         Int      @default(1)
+  rooms            Int      @default(1)
+  bathrooms        Int      @default(1)
+  floor            Int?
+  amenities        String?  // comma-separated list e.g. "WiFi, AC, Parking"
+  basePriceNotes   String?
+  // Prices in EGP (or any base currency) — admin sets these per booking type
+  price6h          Float?
+  price12h         Float?
+  price24h         Float?
+  pricePerDay      Float?
+  supports6h       Boolean  @default(true)
+  supports12h      Boolean  @default(true)
+  supports24h      Boolean  @default(true)
+  supportsMultiDay Boolean  @default(false)
+  isActive         Boolean  @default(true)
+  createdAt        DateTime @default(now())
+
+  place    Place     @relation(fields: [placeId], references: [id])
+  bookings Booking[]
+}
+
+model Customer {
+  id               String   @id @default(cuid())
+  telegramUserId   String   @unique
+  telegramUsername String?
+  fullName         String?
+  phone            String?
+  createdAt        DateTime @default(now())
+
+  bookings Booking[]
+}
+
+enum BookingStatus {
+  pending
+  approved
+  rejected
+  cancelled
+}
+
+model Booking {
+  id             String        @id @default(cuid())
+  customerId     String
+  placeId        String
+  unitId         String
+  bookingType    String // "6h" | "12h" | "24h" | "multiday"
+  startAt        DateTime
+  endAt          DateTime
+  peopleCount    Int?
+  totalPrice     Float?        // Computed from unit price at booking time
+  status         BookingStatus @default(pending)
+  receiptBlobUrl String?
+  adminNote      String?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  customer      Customer          @relation(fields: [customerId], references: [id])
+  place         Place             @relation(fields: [placeId], references: [id])
+  unit          Unit              @relation(fields: [unitId], references: [id])
+  notifications NotificationLog[]
+}
+
+// Persists Telegram bot conversation state across serverless restarts
+model BotState {
+  id             String   @id @default(cuid())
+  telegramUserId String   @unique
+  state          String   @default("idle")
+  payload        Json     @default("{}")
+  updatedAt      DateTime @updatedAt
+}
+
+model NotificationLog {
+  id        String   @id @default(cuid())
+  bookingId String?
+  type      String // "admin_new_booking" | "customer_approved" | "customer_rejected"
+  target    String // chat id
+  status    String // "sent" | "failed"
+  payload   Json     @default("{}")
+  createdAt DateTime @default(now())
+
+  booking Booking? @relation(fields: [bookingId], references: [id])
+}
