@@ -6,12 +6,23 @@ const BASE = () =>
   `https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}`;
 
 async function tgPost(method, body) {
-  const res = await fetch(`${BASE()}/${method}`, {
+  const token = process.env.TELEGRAM_BOT_TOKEN;
+  if (!token) {
+    console.error("[Telegram] TELEGRAM_BOT_TOKEN is not set!");
+    return { ok: false, error: "TELEGRAM_BOT_TOKEN not set" };
+  }
+  const url = `https://api.telegram.org/bot${token}/${method}`;
+  console.log(`[Telegram] POST ${method}`, JSON.stringify(body).slice(0, 200));
+  const res = await fetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
   });
-  return res.json();
+  const data = await res.json();
+  if (!data.ok) {
+    console.error(`[Telegram] ${method} failed:`, JSON.stringify(data));
+  }
+  return data;
 }
 
 export async function sendMessage(chatId, text, extra = {}) {

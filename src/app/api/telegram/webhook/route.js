@@ -6,17 +6,23 @@ import { handleUpdate } from "@/lib/bot-flow";
  * Must respond with 200 quickly to avoid Telegram retries.
  */
 export async function POST(request) {
+  let update;
   try {
-    const update = await request.json();
-    // Process asynchronously without awaiting to respond 200 immediately
-    // Note: On Vercel, the function must complete before response returns,
-    // so we await but keep handling fast.
+    update = await request.json();
+    console.log(
+      "[Webhook] Received update type:",
+      update.message
+        ? `message("${update.message.text ?? "<media>"}" from ${update.message.from?.id})`
+        : update.callback_query
+          ? `callback("${update.callback_query.data}" from ${update.callback_query.from?.id})`
+          : JSON.stringify(Object.keys(update)),
+    );
     await handleUpdate(update);
+    console.log("[Webhook] Update handled successfully");
   } catch (err) {
-    console.error("[Telegram Webhook] Error:", err);
+    console.error("[Webhook] Error processing update:", err);
   }
 
-  // Always return 200 to Telegram
   return new Response("OK", { status: 200 });
 }
 

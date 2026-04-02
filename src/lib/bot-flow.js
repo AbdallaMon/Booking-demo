@@ -31,17 +31,23 @@ import { put } from "@vercel/blob";
 // ─── Entry point ────────────────────────────────────────
 
 export async function handleUpdate(update) {
+  const chatId =
+    update.message?.chat?.id ?? update.callback_query?.message?.chat?.id;
+  const userId = String(
+    update.message?.from?.id ?? update.callback_query?.from?.id ?? "unknown",
+  );
+  console.log(`[BotFlow] Handling update for user=${userId} chat=${chatId}`);
   try {
     if (update.message) {
       await handleMessage(update.message);
     } else if (update.callback_query) {
       await handleCallback(update.callback_query);
+    } else {
+      console.log("[BotFlow] Unknown update type, ignoring");
     }
   } catch (err) {
-    console.error("[BotFlow] Unhandled error:", err);
-    // Attempt to notify the user something went wrong
-    const chatId =
-      update.message?.chat?.id ?? update.callback_query?.message?.chat?.id;
+    console.error("[BotFlow] Unhandled error:", err?.message ?? err);
+    console.error("[BotFlow] Stack:", err?.stack);
     if (chatId) {
       try {
         await sendMessage(
@@ -256,9 +262,12 @@ async function handleCallback(callbackQuery) {
 // ─── Flow steps ─────────────────────────────────────────
 
 async function resetFlow(userId, chatId) {
+  console.log(`[BotFlow] resetFlow user=${userId} chat=${chatId}`);
   await setState(userId, "idle", {});
 
+  console.log("[BotFlow] Fetching places...");
   const places = await prisma.place.findMany({ orderBy: { name: "asc" } });
+  console.log(`[BotFlow] Found ${places.length} places`);
 
   if (!places.length) {
     await sendMessage(
