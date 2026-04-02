@@ -8,10 +8,11 @@ import { PrismaPg } from "@prisma/adapter-pg";
 const globalForPrisma = globalThis;
 
 function createPrismaClient() {
-  // PrismaPg is an AdapterFactory — pass it directly as the adapter.
-  // It internally creates a pg.Pool from the connection config.
+  // max:1 is critical for serverless (Vercel) — each invocation gets one
+  // connection, preventing "too many connections" on Prisma Postgres.
   const adapterFactory = new PrismaPg({
     connectionString: process.env.DATABASE_URL,
+    max: 1,
   });
   return new PrismaClient({ adapter: adapterFactory });
 }

@@ -20,12 +20,59 @@ import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import StatCard from "@/components/StatCard";
 import StatusChip from "@/components/StatusChip";
+import { prisma } from "@/lib/prisma";
 
 async function getStats() {
-  const baseUrl = process.env.APP_URL ?? "http://localhost:3000";
-  const res = await fetch(`${baseUrl}/api/stats`, { cache: "no-store" });
-  if (!res.ok) return null;
-  return res.json();
+  try {
+    const now = new Date();
+    const soonThreshold = new Date(now.getTime() + 2 * 60 * 60 * 1000);
+
+    const [
+      totalBookings,
+      pendingBookings,
+      approvedBookings,
+      activeNow,
+      endingSoon,
+      totalPlaces,
+      totalUnits,
+      recentBookings,
+    ] = await Promise.all([
+      prisma.booking.count(),
+      prisma.booking.count({ where: { status: "pending" } }),
+      prisma.booking.count({ where: { status: "approved" } }),
+      prisma.booking.count({
+        where: { status: "approved", startAt: { lte: now }, endAt: { gte: now } },
+      }),
+      prisma.booking.count({
+        where: { status: "approved", endAt: { gte: now, lte: soonThreshold } },
+      }),
+      prisma.place.count(),
+      prisma.unit.count({ where: { isActive: true } }),
+      prisma.booking.findMany({
+        take: 10,
+        orderBy: { createdAt: "desc" },
+        include: {
+          customer: { select: { fullName: true, telegramUsername: true, telegramUserId: true } },
+          place: { select: { name: true } },
+          unit: { select: { name: true } },
+        },
+      }),
+    ]);
+
+    return {
+      totalBookings,
+      pendingBookings,
+      approvedBookings,
+      activeNow,
+      endingSoon,
+      totalPlaces,
+      totalUnits,
+      recentBookings,
+    };
+  } catch (err) {
+    console.error("[dashboard getStats]", err);
+    return null;
+  }
 }
 
 function fmt(date) {
