@@ -10,8 +10,8 @@ import {
   TableHead,
   TableRow,
   Chip,
-  Link,
 } from "@mui/material";
+import NextLink from "next/link";
 import DashboardIcon from "@mui/icons-material/Dashboard";
 import ApartmentIcon from "@mui/icons-material/Apartment";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
@@ -136,18 +136,13 @@ export default async function DashboardPage() {
                   <TableCell sx={{ fontWeight: 700 }}>Check-in</TableCell>
                   <TableCell sx={{ fontWeight: 700 }}>Price</TableCell>
                   <TableCell sx={{ fontWeight: 700 }}>Status</TableCell>
+                  <TableCell />
                 </TableRow>
               </TableHead>
               <TableBody>
                 {stats?.recentBookings?.length ? (
                   stats.recentBookings.map((b) => (
-                    <TableRow
-                      key={b.id}
-                      hover
-                      component={Link}
-                      href={`/dashboard/bookings/${b.id}`}
-                      sx={{ cursor: "pointer", textDecoration: "none" }}
-                    >
+                    <TableRow key={b.id} hover sx={{ cursor: "pointer" }}>
                       <TableCell>
                         {b.customer?.fullName ?? "—"}
                         <Typography
@@ -183,6 +178,18 @@ export default async function DashboardPage() {
                       </TableCell>
                       <TableCell>
                         <StatusChip status={b.status} />
+                      </TableCell>
+                      <TableCell>
+                        <NextLink
+                          href={`/dashboard/bookings/${b.id}`}
+                          style={{
+                            textDecoration: "none",
+                            color: "inherit",
+                            fontSize: 13,
+                          }}
+                        >
+                          View →
+                        </NextLink>
                       </TableCell>
                     </TableRow>
                   ))
