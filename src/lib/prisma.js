@@ -2,7 +2,7 @@
  * Prisma v7 singleton client using @prisma/adapter-pg (factory pattern).
  * Re-uses the connection pool across serverless invocations (in dev).
  */
-import { PrismaClient } from "../generated/prisma/client";
+import { PrismaClient } from "@/generated/prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 
 const globalForPrisma = globalThis;
